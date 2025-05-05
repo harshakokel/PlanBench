@@ -36,7 +36,7 @@ def send_query(query, engine, max_tokens, model=None, stop="[STATEMENT]"):
             print("[-]: Failed RITS query execution: {}".format(e))
         text_response = response.choices[0].message.content if not max_token_err_flag else "ERROR"
         return text_response.strip()        
-    elif engine == 'bloom':
+    elif engine == 'bloom' or "hf" in engine:
 
         if model:
             response = generate_from_bloom(model['model'], model['tokenizer'], query, max_tokens)

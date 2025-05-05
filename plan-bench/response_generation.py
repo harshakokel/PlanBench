@@ -26,11 +26,27 @@ class ResponseGenerator:
         elif self.engine.startswith("RITS:"):
             self.model = self.engine.split(":")[1]
             self.engine = "RITS"
+        elif self.engine.startswith("hf:"):
+            from peft import PeftModel, PeftConfig
+            model_args = self.engine.split(":")
+            cache_dir = './.cache'
+            # model_args[1] is pretrained model path or huggingface id.
+            model = AutoModelForCausalLM.from_pretrained(model_args[1],  device_map='auto',cache_dir=cache_dir)
+            new_engine = model_args[1].replace('/','-')
+            if len(model_args) > 2:
+                # model_args[2] is peft adapter model path or if
+                model = PeftModel.from_pretrained(model, model_args[2])
+                new_engine += "_"+model_args[2].replace('/','-')
+            tokenizer = AutoTokenizer.from_pretrained(model_args[1])
+            self.engine = "hf_"+new_engine
+            print("model", model)
+            print("tokenizer", tokenizer)
+            self.model =  {'model': model, 'tokenizer': tokenizer}
         elif 'finetuned' in self.engine:
             # print(self.engine)
             assert self.engine.split(':')[1] is not None
             model = ':'.join(self.engine.split(':')[1:])
-            # print(model)
+            print(model)
             self.engine='finetuned'
             self.model = {'model':model}
         else:
