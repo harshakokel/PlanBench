@@ -23,6 +23,9 @@ class ResponseGenerator:
         self.data = self.read_config(config_file)
         if self.engine == 'bloom':
             self.model = self.get_bloom()
+        elif self.engine.startswith("RITS:"):
+            self.model = self.engine.split(":")[1]
+            self.engine = "RITS"
         elif 'finetuned' in self.engine:
             # print(self.engine)
             assert self.engine.split(':')[1] is not None
@@ -46,6 +49,8 @@ class ResponseGenerator:
 
     def get_responses(self, task_name, specified_instances = [], run_till_completion=False):
         output_dir = f"responses/{self.data['domain_name']}/{self.engine}/"
+        if self.engine == 'RITS':
+            output_dir = f"responses/{self.data['domain_name']}/{self.model}/"
         os.makedirs(output_dir, exist_ok=True)
         output_json = output_dir+f"{task_name}.json"
         while True:

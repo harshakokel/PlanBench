@@ -36,3 +36,4 @@ plan-bench/results/mystery_blocksworld_3/text-davinci-002/
 plan-bench/results/random_blocksworld/
 plan-bench/results/random_blocksworld_3/
 plan-bench/examples/
+*.pyc

@@ -1,7 +1,16 @@
 from transformers import StoppingCriteriaList, StoppingCriteria
 import openai
 import os
-openai.api_key = os.environ["OPENAI_API_KEY"]
+openai.api_key = os.getenv("OPENAI_API_KEY","xxx")
+
+            
+rits_client = openai.OpenAI(
+                api_key="NotRequired",
+                base_url=os.getenv("RITS_BASE_URL", "xxx/v1"), #model inference endpoint and then /v1
+                default_headers={"RITS_API_KEY":  os.getenv("RITS_API_KEY","xxx")} # API Key
+            )
+
+
 def generate_from_bloom(model, tokenizer, query, max_tokens):
     encoded_input = tokenizer(query, return_tensors='pt')
     stop = tokenizer("[PLAN END]", return_tensors='pt')
@@ -13,7 +22,21 @@ def generate_from_bloom(model, tokenizer, query, max_tokens):
 
 def send_query(query, engine, max_tokens, model=None, stop="[STATEMENT]"):
     max_token_err_flag = False
-    if engine == 'bloom':
+    if engine == 'RITS':
+        try:
+            response = rits_client.chat.completions.create(
+                model=model, 
+                messages = [
+                    {"role": "system", "content": "You are the planner assistant who comes up with correct plans."},
+                    {"role": "user", "content": query}
+                ] 
+            )  
+        except Exception as e:
+            max_token_err_flag = True
+            print("[-]: Failed RITS query execution: {}".format(e))
+        text_response = response.choices[0].message.content if not max_token_err_flag else "ERROR"
+        return text_response.strip()        
+    elif engine == 'bloom':
 
         if model:
             response = generate_from_bloom(model['model'], model['tokenizer'], query, max_tokens)
